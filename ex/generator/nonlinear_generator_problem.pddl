@@ -1,0 +1,17 @@
+(define (problem run-generator2)
+(:domain generator)
+(:objects generator - gen tank1
+tank2 - tank )
+(:init
+(= ( gen_fuel_level generator)
+60)
+(= ( capacity generator) 60)
+(= ( tank_fuel_level tank1 ) 25)
+(= ( sqrtvolinit tank1 ) 5)
+(= ( flow_constant tank1 ) 0.2)
+(= ( tank_fuel_level tank2 ) 25)
+(= ( sqrtvolinit tank2 ) 5)
+(= ( flow_constant tank2 ) 0.4))
+(:goal ( generator_ran generator))
+(:metric minimize ( total-time ))
+)
