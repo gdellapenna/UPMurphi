@@ -2,7 +2,8 @@
 The Universal Planner Murphi supports planning and universal planning for linear and nonlinear continuous PDDL+ models with processes and events. UPMurphi also supports Timed Initial Literals and Timed Initial Fluents.
 
 UPMurphi is based on the Discretise and Validate approach and it has been designed to automatically interface with the VAL plan validator.
-Quick Start
+
+## Quick Start
 
 To quickly begin using UPMurphi, follow these steps.
 
