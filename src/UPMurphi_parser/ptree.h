@@ -2943,13 +2943,13 @@ public:
         toReturn += "clock rule \" time passing \" \n "
             "(true) ==> \n"
             "BEGIN \n \t";
-        toReturn += this->toMurphi_TIL_TIF(indent, problem);
-        toReturn += "\n \t event_check();\n\t apply_continuous_change();\n";
-        toReturn += "\t";
         toReturn += GLOBAL_CLOCK;
         toReturn += " := ";
         toReturn += GLOBAL_CLOCK;
-        toReturn += " + T;\nEND;\n";
+        toReturn += " + T;\n";
+        toReturn += this->toMurphi_TIL_TIF(indent, problem);
+        toReturn += "\n \t event_check();\n\t apply_continuous_change();\n";
+        toReturn += "END;\n";
         
 		//}
 		//toReturn += this->ops->toMurphi_dynamic_check();

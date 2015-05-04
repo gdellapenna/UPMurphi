@@ -450,6 +450,7 @@ string problem::toMurphi(domain* the_domain)
     toReturn += "\n";
   }
   toReturn += "all_event_true := true;\n";
+  toReturn += the_domain->toMurphi_TIL_TIF(indent, this);
   toReturn += "END; -- close startstate\n\n";
   return toReturn;
 }
