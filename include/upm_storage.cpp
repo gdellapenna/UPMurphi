@@ -419,10 +419,11 @@ void OutputManager::WritePlans()
   double time;
   unsigned temp,dur,iplan,lplan,max_lplan=0;
   edge* plan;
+  bool first_happening_added = false;
   //double epsilon = min(DISCRETIZATION,EPSILON_TIME_SEPARATION);
 
   fseek(plans,0,SEEK_SET);
-  //ancora una volta prescansioniamo per risparmiare spazio, ma sarebbe molto più comodo scrivercelo
+  //ancora una volta prescansioniamo per risparmiare spazio, ma sarebbe molto piÃ¹ comodo scrivercelo
   while(!feof(plans) && (fread(&from,sizeof(unsigned long),1,plans)==1)) {
     lplan=1;
     while(!feof(plans) && (fread(&rule,sizeof(RULE_INDEX_TYPE),1,plans)==1)) {
@@ -496,7 +497,9 @@ void OutputManager::WritePlans()
     for(iplan=1; iplan<lplan; ++iplan) {
       //ACTIONS
       if (Rules->RulePDDLClass(plan[iplan].rule) == RuleManager::Action) {
-        if (time>0) time += EPSILON_TIME_SEPARATION; //separation
+        if (first_happening_added) time += EPSILON_TIME_SEPARATION; //separation
+		    else first_happening_added=true;
+
         fprintf(target,"%0.3f: %s [%0.3f]",time,Rules->RulePDDLName(plan[iplan].rule),(double)DISCRETIZATION *(double)
 #ifdef VARIABLE_DURATION
                 plan[iplan].duration
@@ -516,7 +519,9 @@ void OutputManager::WritePlans()
         fprintf(target,"\n");
         //DURATIVE ACTIONS
       } else if (Rules->RulePDDLClass(plan[iplan].rule) == RuleManager::DurativeStart) {
-        if (time>0) time += EPSILON_TIME_SEPARATION; //separation
+        if (first_happening_added) time += EPSILON_TIME_SEPARATION; //separation
+    		else first_happening_added=true;
+
         dur =
 #ifdef VARIABLE_DURATION
           plan[iplan].duration;
