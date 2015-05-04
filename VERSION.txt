@@ -1,5 +1,1 @@
 This is UPMurphi version 3.0.2
-	changelog UPMurphi_parser:
-	1) fixed issue about TIL/TIF check (now check the start state)
-	2) fixed issue within the “time-passing” rule (now the chain is (1) increase TIME variable, (2) check TIL/TIF, (3) check events/processes
-

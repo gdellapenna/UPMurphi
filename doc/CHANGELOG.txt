@@ -1,3 +1,9 @@
+3.02: Bug fix release (2015/05/04)
+
+[FIX] fixed issue about TIL/TIF check (now check the start state)
+[FIX] fixed issue within the “time-passing” rule (now the chain is (1) increase TIME variable, (2) check TIL/TIF, (3) check events/processes
+
+
 3.01: Bug fix release (2015/04/29)
 
 [FIX] Fixed an issue in comparing Real_type variable (eg, PDDL function type) 
