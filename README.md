@@ -30,14 +30,14 @@ Note that the current version does not use any heuristic search algorithm. Due t
 Assuming you are in the ex/generator directory:
 
 * From a PDDL+ domain and problem (with default discretisation settings):  
-    `../../bin/upmc nonlinear_generator.pddl nonlinear_generator_problem.pddl`
+    `../../bin/upmc planetary_lander.pddl planetary_lander_problem.pddl`
 * From a PDDL+ domain and Problem with user specific discretisation settings: timestep 0.1, mantissa digits: 5 exponent digits: 3  
     `../../bin/upmc --custom 0.1 5 3 nonlinear_generator.pddl nonlinear_generator_problem.pddl`
 
 ### Planning and Validating
 
 * Default settings (search for feasible solution, output PDDL+ plans, 1Gb RAM):  
-    `./nonlinear_generator_problem_planner`
+    `./planetary_lander_planner`
 * Specific Settings, 3.2Gb RAM, plan duration limited to 100 time units and PDDL+ verbose mode (includes values for the state variable):  
    `./nonlinear_generator_problem_planner -m 3200 -tl 100 -format:pddlvv`
 
