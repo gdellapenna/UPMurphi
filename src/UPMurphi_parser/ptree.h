@@ -1274,7 +1274,7 @@ public:
 
 class expression: public parse_category {
 public:
-	virtual string toMurphi(int indent) = 0;
+    virtual string toMurphi(int indent) = 0;
 	virtual string toMurphi_external_decl(int indent) = 0;
 	virtual string toMurphi_external_call(int indent) = 0;
 	virtual bool exist(vector<string> v, string s);
@@ -2654,39 +2654,46 @@ public:
         for (; it != operator_vector.end(); ++it) {
             d = dynamic_cast<durative_action*> (*it);
             if (d != 0){ // it's a durative action. check the value added by d->check_DA_duration_runtime();
+                string temp_DA;
                 vector<var_symbol*> param = d->parameters->symbol_list();
-                DA_to_be_included += this->visit(param, &for_counter, statement, indent, ",");
+                temp_DA += this->visit(param, &for_counter, statement, indent, ",");
                 include_DA = false;
-                DA_to_be_included += "if (";
-                DA_to_be_included += d->get_clock();
+                temp_DA += "if (";
+                temp_DA += d->get_clock();
+                
                 switch (d->duration_compar) {
                     case (0): // equal to >
                         break;
                     case (1): // equal to >=
                         break;
                     case (2): // equal to <
-                        DA_to_be_included += " >= "; // DA is violated in this case
+                        temp_DA += " >= "; // DA is violated in this case
                         include_DA = true;
                         break;
                     case (3): // equal to <=
-                        DA_to_be_included += " > "; // DA is violated in this case
+                        temp_DA += " > "; // DA is violated in this case
                         include_DA = true;
                         break;
                     case (4): // equal to =
-                        DA_to_be_included += " > "; // DA is violated in this case
+                        temp_DA += " > "; // DA is violated in this case
                         include_DA = true;
                         break;
                 }
                 if (d->duration_expr != NULL){
-                    DA_to_be_included += d->duration_expr->toMurphi(0);
+                    // What should be printed here? Duration expression or constraint?
+                    temp_DA += d->duration_expr->toMurphi(0);
+                    //temp_DA += d->dur_constraint->toMurphi(0);
+                    
                 }
-                DA_to_be_included += ") then return true;\n endif;\n";
+                temp_DA += ") then return true;\n endif;\n";
                 for (int i=0; i < for_counter; i++)
-                    DA_to_be_included += "END; -- close for \n";
+                    temp_DA += "END; -- close for \n";
+                if (include_DA)
+                    DA_to_be_included += temp_DA;
             }
         }
-        if (include_DA)
-            toReturn += DA_to_be_included;
+        
+        toReturn += DA_to_be_included;
         toReturn += "\n return DA_duration_violated; \n END; -- close begin\n";
         return toReturn;
     }

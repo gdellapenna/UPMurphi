@@ -450,7 +450,6 @@ string problem::toMurphi(domain* the_domain)
     toReturn += "\n";
   }
   toReturn += "all_event_true := true;\n";
-  toReturn += the_domain->toMurphi_TIL_TIF(indent, this);
   toReturn += "END; -- close startstate\n\n";
   return toReturn;
 }
@@ -987,6 +986,7 @@ string analysis::toMurphi_declaration(int indent)
   declarations += "\n\n" + toReturn;
   declarations += this->the_domain->ops->toMurphi_process(indent);
   declarations += this->the_domain->ops->toMurphi_event_failure(indent);
+    this->the_domain->ops->check_DA_duration_runtime();
 
   return type_decl + "\n" + const_decl + "\n" + declarations;
 }
