@@ -29,17 +29,17 @@ Note that the current version does not use any heuristic search algorithm. Due t
 
 Assuming you are in the ex/generator directory:
 
-* From a PDDL+ domain and problem (with default discretisation settings):  
+* From a PDDL+ domain and problem with user specific discretisation settings (timestep 0.5, mantissa digits: 5 exponent digits: 2):
+    `../../bin/upmc tank_domain.pddl tank_problem.pddl --custom 0.5 5 2`
+* From a PDDL+ domain and problem with default discretisation settings:  
     `../../bin/upmc planetary_lander.pddl planetary_lander_problem.pddl`
-* From a PDDL+ domain and Problem with user specific discretisation settings: timestep 0.1, mantissa digits: 5 exponent digits: 3  
-    `../../bin/upmc --custom 0.1 5 3 nonlinear_generator.pddl nonlinear_generator_problem.pddl`
 
 ### Planning and Validating
 
-* Default settings (search for feasible solution, output PDDL+ plans, 1Gb RAM):  
-    `./planetary_lander_planner`
-* Specific Settings, 3.2Gb RAM, plan duration limited to 100 time units and PDDL+ verbose mode (includes values for the state variable):  
-   `./nonlinear_generator_problem_planner -m 3200 -tl 100 -format:pddlvv`
+* Default settings (search for feasible solution, output PDDL+ plans, 1Gb RAM) with PDDL+ verbose mode (includes comments with values for the state variable):
+   `./tank_domain_planner -format:pddlvv`
+* Specific Settings (2Gb RAM, plan duration limited to 20 time units):  
+    `./planetary_lander_planner -m 2000 -tl 20`
 
 ### Papers on UPMurphi
 
