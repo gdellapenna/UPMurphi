@@ -45,7 +45,7 @@ argclass::argclass(int ac, char **av)
   argc(ac), argv(av), print_license(FALSE), help(FALSE), checking(TRUE),
   no_compression(FALSE), hash_compression(TRUE), UPMurphi_planner (FALSE), UPMurphi_disk(FALSE),
   variable_weight(FALSE),variable_duration(FALSE),m_filename(NULL),pddl_domain_filename(NULL),pddl_problem_filename(NULL),
-  keep_source(TRUE),compile_source(TRUE),compile_pddl(TRUE),force_recompile(FALSE),dynamic_debug(FALSE),pddl_parser_prompt(FALSE),
+  keep_source(TRUE),compile_source(TRUE),compile_pddl(TRUE),force_recompile(FALSE),dynamic_debug(FALSE),path_debug(FALSE),pddl_parser_prompt(FALSE),
   pddl_parser_set_1(0), pddl_parser_set_2(0), pddl_parser_set_3(0),warnings(FALSE)
 {
   //bool initialized_filename = FALSE;
@@ -101,10 +101,23 @@ argclass::argclass(int ac, char **av)
     }
 
     if (strcmp(av[i], "--debug") == 0) {
+	  if (path_debug) {
+		fprintf(stderr, "Cannot enable both debug modes.\n");
+        exit(1);
+	  }
       dynamic_debug = TRUE;
       continue;
     }
 
+    if (strcmp(av[i], "--debugpath") == 0) {
+	  if (dynamic_debug) {
+		fprintf(stderr, "Cannot enable both debug modes.\n");
+        exit(1);
+	  }
+  	  path_debug = TRUE;
+      continue;
+    }
+	
     if (strcmp(av[i], "--varweight") == 0) {
       variable_weight = TRUE;
       continue;
@@ -239,6 +252,7 @@ void argclass::PrintOptions(void)
 --noexec             do not (re)compile planner executable \n\
 --nopddl             do not (re)compile pddl source \n\
 --debug              use step-execution to debug model\n\
+--debugpath          use single-path-execution to debug model\n\
 \n\
 --prompt             make the PDDL parser prompt for various parameters (atherwise use defaults)\n\
 --custom X Y Z       set the PDDL parser time quantum, real scale and real fraction digits parameters to X, Y and Z, respectively\n\

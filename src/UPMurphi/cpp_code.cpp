@@ -4449,6 +4449,8 @@ const char *program::generate_code()
     fprintf(codefile, "#define UPMURPHI_DISK_EXTENSIONS\n");
   if (args->dynamic_debug)
     fprintf(codefile, "#define DYNDBG\n");
+  if (args->path_debug)
+    fprintf(codefile, "#define SNGDBG\n");
   if (args->variable_weight)
     fprintf(codefile, "#define VARIABLE_WEIGHT\n");
   if (args->variable_duration)

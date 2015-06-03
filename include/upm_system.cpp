@@ -375,16 +375,58 @@ StartStateManager::AllStartStates()
 {
   state *nextstate = NULL;
   unsigned long state_index;
+  
 
+#ifdef SNGDBG
+  char answer;
+  static state *originalstate = new state;
+  static state *originalnextstate = new state;
+  MEMTRACKALLOC
+  
+  if (numstartstates>1) {
+	cout << "-- DEBUG mode -- Choose start state " << endl;
+	answer='n';
+  }
+#endif  
+  
   for(what_startstate=0; what_startstate<numstartstates; what_startstate++) {
 //BREAKPOINT("nextstate-gen")
     nextstate = StartState();   // nextstate points to internal data at theworld.getstate()
 //BREAKPOINT("nextstate-gend")
-    if (StateSet->Add(nextstate, FALSE, TRUE, &state_index)) AddStartState(state_index);
-//BREAKPOINT("nextstate added")
-  }
 
-  //cout << "\nNumber of startstate: "<<numstartstates<<endl;
+#ifdef SNGDBG  
+  if (numstartstates>1) {
+	  do {
+		  //theworld.to_state(NULL); // trick : marks variables in world
+		  //theworld.clear();
+		  StateCopy(originalstate,workingstate);
+		  StateCopy(originalnextstate,nextstate);
+		  StateCopy(workingstate,nextstate);
+		  cout << "Start from start state state " << what_startstate <<  ":";
+		  theworld.pddlprint(stdout,"\n");
+		  StateCopy(workingstate,originalstate);
+		  StateCopy(nextstate,originalnextstate);
+		  cout << "[Y/n]? ";
+
+		  if (cin.peek() == '\n') {
+			answer='y';
+		  } else {
+			cin >> answer;
+		  }
+		  cin.ignore(256, '\n');
+		} while( !cin.fail() && answer!='y' && answer!='n' );
+  }
+	if ( answer=='y' || numstartstates<=1) {
+#endif
+
+		if (StateSet->Add(nextstate, FALSE, TRUE, &state_index)) AddStartState(state_index);
+//BREAKPOINT("nextstate added")
+
+#ifdef SNGDBG  
+		break;
+	}
+#endif
+  }
 }
 
 void StartStateManager::AddStartState(unsigned long s)
@@ -602,9 +644,6 @@ RuleManager::EnabledTransition()
 {
   static setofrules ret;
   int p;	// Priority of the current rule
-  char answer;
-  bool something_to_ask;
-
 
   ret.removeall();
 
@@ -626,6 +665,9 @@ RuleManager::EnabledTransition()
   }
 
 #ifdef DYNDBG
+  char answer;
+  bool something_to_ask;
+
   something_to_ask=false;
   for ( what_rule=0; what_rule<numrules && !something_to_ask; what_rule++) {
     something_to_ask = (ret.in(what_rule) && always_execute_rules->get(what_rule)==0 && always_exclude_rules->get(what_rule)==0);
@@ -673,6 +715,45 @@ RuleManager::EnabledTransition()
   for ( what_rule=0; what_rule<numrules; what_rule++) {
     if (ret.in(what_rule) && always_exclude_rules->get(what_rule)==1) ret.remove(what_rule);
   }
+  // Re-Compute minimum priority
+  minp = INT_MAX;
+  for ( what_rule=0; what_rule<numrules; what_rule++) {
+    if (ret.in(what_rule) && ((p = generator->Priority(what_rule)) < minp)) minp = p;
+  }
+#endif
+
+#ifdef SNGDBG
+    char answer;
+
+    cout << "-- PATH DEBUG mode -- Current state is " << endl;
+    theworld.pddlprint(stdout,"\n");
+
+    cout << "-- PATH DEBUG mode -- Enabled rule(s) are " << endl;
+    for ( what_rule=0; what_rule<numrules; what_rule++) {
+      if (ret.in(what_rule)) {
+        cout << "* Rule \"" << RuleName(what_rule) << "\" (action \"" << RulePDDLName(what_rule) <<  "\")" << endl ;
+      }
+    }
+
+    cout << "-- PATH DEBUG mode -- Choose ONE enabled rule to fire " << endl;
+    answer='n';
+    for ( what_rule=0; what_rule<numrules; what_rule++) {
+      if (ret.in(what_rule)) {
+		if (answer!='y') {
+			do {
+			  cout << "Execute rule #" << what_rule << " \"" << RuleName(what_rule) << "\" (action \"" << RulePDDLName(what_rule) <<  "\")" << " [y/N]? ";
+			  if (cin.peek() == '\n') {
+				answer='n';
+			  } else {
+				cin >> answer;
+			  }
+			  cin.ignore(256, '\n');
+			} while( !cin.fail() && answer!='y' && answer!='n' );
+			if ( answer!='y' ) ret.remove(what_rule);
+		} else ret.remove(what_rule);        
+      }
+    }
+	
   // Re-Compute minimum priority
   minp = INT_MAX;
   for ( what_rule=0; what_rule<numrules; what_rule++) {
@@ -1219,10 +1300,8 @@ AlgorithmManager::Build_Plan_From(unsigned long from, FILE *target)
   unsigned len=0,dur=0,wei=0;
 
   if (StateGraph->OutDegree(from) > 0) { //controllable
-    //cout << "PLAN: ";
     while(true) {
       fwrite(&from,sizeof(unsigned long),1,target);
-      //cout << "S" << from;
       if (StateGraph->OutDegree(from) > 0) {
         e = StateGraph->GetOutgoing(from,0);
         fwrite(&e->rule,sizeof(RULE_INDEX_TYPE),1,target);
@@ -1232,7 +1311,6 @@ AlgorithmManager::Build_Plan_From(unsigned long from, FILE *target)
 #ifdef VARIABLE_DURATION
         fwrite(&e->duration,sizeof(int),1,target);
 #endif
-        //cout << "-R" << e->rule << "-";
         from = e->to;
         len++; //plan length
 #ifdef VARIABLE_WEIGHT
@@ -1254,7 +1332,6 @@ AlgorithmManager::Build_Plan_From(unsigned long from, FILE *target)
         fwrite(&wzero,sizeof(int),1,target);
 #endif
         fwrite(&from,sizeof(unsigned long),1,target); //loop = plan end
-        //cout << endl;
         break;
       }
     }

@@ -153,6 +153,7 @@ class argclass
   bool compile_pddl;		// compile pddl
   bool force_recompile;		// force recompilation
   bool dynamic_debug;		// create debug-mode (step-execution) planner
+  bool path_debug;		// create debug-mode (single-path-execution) planner
   bool variable_weight;		//use extensions for state-dependant rule weights
   bool variable_duration;	//use extensions for state-dependant rule durations
   bool pddl_parser_prompt;  //pass --prompt to pddl parser
