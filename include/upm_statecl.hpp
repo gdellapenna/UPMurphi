@@ -8,10 +8,14 @@
 *
 */
 
+#if __WORDSIZE == 32
 #ifndef ALIGN
 #define BLOCKS_IN_WORLD (((BITS_IN_WORLD + (4*BITS( BIT_BLOCK )) - 1 ) / (4*BITS(BIT_BLOCK )))*4)
 #else
 #define BLOCKS_IN_WORLD (((BITS_IN_WORLD + (4*BITS( BIT_BLOCK )) - 1 ) / (4*BITS(BIT_BLOCK )))*4)
+#endif
+#else //__WORDSIZE == 64
+#define BLOCKS_IN_WORLD (((BITS_IN_WORLD + (8*BITS( BIT_BLOCK )) - 1 ) / (8*BITS(BIT_BLOCK )))*8)
 #endif
 
 /****************************************   // added by Uli
@@ -74,7 +78,11 @@ class state
 #ifdef HASHC
 #ifdef ALIGN
   // Uli: only in the aligned version the hashkeys are stored with the state
+#if __WORDSIZE == 32
   unsigned long hashkeys[3];
+#else //__WORDSIZE == 64
+  unsigned int hashkeys[3];
+#endif
 #endif
 #endif
 
@@ -151,7 +159,11 @@ class state
 
   // key for hash function, changes by Uli
   /* defines log_2(sizeof(long)) */
+#if __WORDSIZE == 32
 #define LOG2_UL 2
+#else //__WORDSIZE == 64
+#define LOG2_UL 3
+#endif
 
 #ifndef HASHC
   unsigned long hashkey(void) const

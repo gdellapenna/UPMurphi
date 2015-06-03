@@ -80,6 +80,11 @@
 
 // Uli: hash compaction options
 #ifdef HASHC
+/*
+#if __WORDSIZE == 64
+#define NUM_BITS_PREFIX_INFO "-binfo"	// number of bits to store
+#endif
+*/
 #define NUM_BITS_PREFIX     "-b"     // number of bits to store
 #define TRACE_DIR_PREFIX    "-d"     // directory for error trace info file
 #endif
@@ -337,6 +342,11 @@ argclass::argclass(int ac, char** av)
     verbose_from_state (0,"verbose controlled mode"),
     use_verbose_from_state (FALSE,"use verbose controlled mode"),
     no_deadlock     (TRUE, "deadlock detection"),
+/*
+#if __WORDSIZE == 64
+	print_64bit_info(FALSE, "64bit hash compaction printing"),
+#endif	
+*/
     print_options   (FALSE, "options printing"),
     print_license   (FALSE, "license printing"),
     print_rule      (FALSE, "rule information printing"),
@@ -582,6 +592,14 @@ void argclass::ProcessOptions(string_iterator *options)
       trace_file.set(TRUE);
       continue;
     };
+/*	
+#if __WORDSIZE == 64
+    if (strcmp(option, NUM_BITS_PREFIX_INFO) == 0) {
+      print_64bit_info.set(TRUE);
+      continue;
+    }
+#endif	
+*/
 #endif
 
     if ( strncmp(option, LOOPMAX_PREFIX, strlen(LOOPMAX_PREFIX) ) == 0 ) {
@@ -977,6 +995,12 @@ void argclass::PrintOptions( void )   // changes by Uli
 //     << "\t-loop<n>      allow loops to be executed at most n times.\n"
 #ifdef HASHC
        << "\t-b<n>         hash compaction: number of bits to store (default: "<< DEFAULT_BITS << ").\n"
+/*
+#if __WORDSIZE == 64
+      <<
+      "\t-binfo        hash compaction: maximum value for -b within the given memory.\n"
+#endif
+*/	   
 //<< "\t-d dir        write trace info into file dir/" << PROTOCOL_NAME << TRACE_FILE << ".\n"
 #endif
        << "Reporting: \n"
@@ -1729,17 +1753,31 @@ unsigned long TraceFileManager::numLast()
 //           numBytes  for the compressed value
 // - states are numbered beginning with 1
 
+#if __WORDSIZE == 32
 void TraceFileManager::writeLong(unsigned long l, int bytes)
+#else //__WORDSIZE == 64
+void TraceFileManager::writeLong(unsigned int l, int bytes)
+#endif
 {
   for (int i=0; i<bytes; i++)
     if (fputc(int(l>>(3-i)*8 & 0xffUL), fp) == EOF)
       Error.Notrace("Problems writing to trace info file %s.", name);
 }
 
+#if __WORDSIZE == 32
 void TraceFileManager::write(unsigned long c1, unsigned long c2,
-                             unsigned long previous)
+			     unsigned long previous)
+#else //__WORDSIZE == 64
+void TraceFileManager::write(unsigned int c1, unsigned int c2,
+			     unsigned long previous)
+#endif
 {
+#if __WORDSIZE == 32		/* could also use __WORDSIZE/8 */
   writeLong(previous, 4);
+#else //__WORDSIZE == 64
+  writeLong((unsigned int)(previous >> 32), 4);
+  writeLong((unsigned int)(previous & 0xffffffffUL), 4);
+#endif
   writeLong(c1, numBytes>4 ? 4 : numBytes);
   if (numBytes>4)
     writeLong(c2, numBytes-4);
@@ -1755,7 +1793,12 @@ unsigned long TraceFileManager::readLong(int bytes)
     if ((g=fgetc(fp)) == EOF)
       Error.Notrace("Problems reading from trace info file %s.", name);
     else
-      ret |= ((unsigned long)g & 0xffUL) << (3-i)*8;
+#if __WORDSIZE == 32
+      ret |= ((unsigned int) g & 0xffUL) << (3 - i) * 8;
+#else //__WORDSIZE == 64
+      ret |= ((unsigned int) g & 0xffUL) << ((bytes == 8 ? 7 : 3) - i) * 8;
+#endif
+
 
   return ret;
 }
@@ -1763,13 +1806,24 @@ unsigned long TraceFileManager::readLong(int bytes)
 const TraceFileManager::Buffer* TraceFileManager::read(unsigned long number)
 {
   if (number!=inBuf) {
-    if (fseek(fp, (number-1)*(4+numBytes), SEEK_SET))
+#if __WORDSIZE == 32
+    if (fseek(fp, (number - 1) * (4 + numBytes), SEEK_SET))
+#else //__WORDSIZE == 64
+    if (fseek(fp, (number - 1) * (8 + numBytes), SEEK_SET))
+#endif
       Error.Notrace("Problems during seek in trace info file %s.", name);
 
+#if __WORDSIZE == 32
     buf.previous = readLong(4);
-    buf.c1 = readLong(numBytes>4 ? 4 : numBytes);
-    if (numBytes>4)
-      buf.c2 = readLong(numBytes-4);
+    buf.c1 = readLong(numBytes > 4 ? 4 : numBytes);
+    if (numBytes > 4)
+      buf.c2 = readLong(numBytes - 4);
+#else //__WORDSIZE == 64
+    buf.previous = readLong(8);
+    buf.c1 = (unsigned int) readLong(numBytes > 4 ? 4 : numBytes);
+    if (numBytes > 4)
+      buf.c2 = (unsigned int) readLong(numBytes - 4);
+#endif
 
     inBuf = number;
   }

@@ -385,13 +385,6 @@ class argclass
 #ifdef HAS_CLOCK
   argnum maxtime;
 #endif
-  //argnum sim_val;
-  //argnum sim_report_val;
-  //argbool ctrl_print;
-  //argbool table_print;
-  //argbool sim;
-  //argbool hash;
-  //argbool startstates;
   argbool deleteintermediate;
 
   argsearch_alg search_alg;
@@ -415,6 +408,11 @@ class argclass
   argnum  loopmax;
   argbool verbose;
   argbool no_deadlock;
+/*  
+#if __WORDSIZE == 64
+  argbool print_64bit_info;
+#endif 
+*/
   argbool print_options;
   argbool print_license;
   argbool print_rule;
@@ -480,8 +478,13 @@ class TraceFileManager
  public:
   struct Buffer {            // buffer for read
     unsigned long previous;
+#if __WORDSIZE == 32
     unsigned long c1;
     unsigned long c2;
+#else //__WORDSIZE == 64
+    unsigned int c1;
+    unsigned int c2;
+#endif
   };
 
  private:
@@ -491,7 +494,11 @@ class TraceFileManager
   Buffer buf;             // buffer for read
   unsigned long inBuf;    // number of state in buffer (0: empty)
   unsigned long last;     // number of last state written
+#if __WORDSIZE == 32
   void writeLong(unsigned long l, int bytes);
+#else //__WORDSIZE == 64
+  void writeLong(unsigned l, int bytes);
+#endif
   unsigned long readLong(int bytes);
 
  public:
@@ -499,7 +506,11 @@ class TraceFileManager
   ~TraceFileManager();
   void setBytes(int bits);
   unsigned long numLast();
+#if __WORDSIZE == 32
   void write(unsigned long c1, unsigned long c2, unsigned long previous);
+#else //__WORDSIZE == 64
+  void write(unsigned int c1, unsigned int c2, unsigned long previous);
+#endif
   const Buffer* read(unsigned long number);
 };
 #endif

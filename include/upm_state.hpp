@@ -12,6 +12,8 @@
 #ifndef _STATE_
 #define _STATE_
 
+#define BITUNSIGNED 32		//sizeof(Unsigned32)*CHAR_BIT
+
 /****************************************
   There are three different declarations:
   1) state
@@ -278,8 +280,12 @@ class state_set
 {
 
 #ifdef HASHC
-  typedef unsigned long Unsigned32;    // basic building block of the hash
-  // table, slots may have different size
+#if __WORDSIZE == 32
+  typedef unsigned long Unsigned32;	// basic building block of the hash 
+  // table slots may have different size
+#else //__WORDSIZE == 64
+  typedef unsigned int Unsigned32;
+#endif
 #endif
 
   // data
@@ -287,6 +293,9 @@ class state_set
 #ifndef HASHC
   state *table;                        /* pointer to the hash table */
 #else
+#if __WORDSIZE == 64
+  unsigned int bits_for_size;	/* number of bits to address the whole table */
+#endif
   Unsigned32 *table;
 #endif
   unsigned long *disk_index;

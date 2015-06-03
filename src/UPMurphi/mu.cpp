@@ -534,10 +534,10 @@ void print_header()
   printf
   ("%s :\nCopyright (C) 2007 - 2015: G. Della Penna, B. Intrigila, D. Magazzeni, F. Mercorio.\n",
    MURPHI_VERSION);
-  printf ("%s is based on CMurphi release 5.4.\n\n", MURPHI_VERSION);
+  printf ("%s is based on CMurphi release 5.4.9.\n\n", MURPHI_VERSION);
 
   printf
-  ("CMurphi Release 5.4 :\nCopyright (C) 2001 - 2003 by E. Tronci, G. Della Penna, B. Intrigila, I. Melatti, M. Zilli.");
+  ("CMurphi Release 5.4.9 :\nCopyright (C) 2009 - 2012 by Sapienza University of Rome.");
   printf ("\nCMurphi Release 5.4 is based on Murphi release 3.1.\n\n");
   printf
   ("Murphi Release 3.1 :\nCopyright (C) 1992 - 1999 by the Board of Trustees of\nLeland Stanford Junior University.\n\n");

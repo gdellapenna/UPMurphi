@@ -17,8 +17,11 @@ StateManager::StateManager(bool createqueue, unsigned long NumStates)
     pno(1.0),num_errors(0)
 {
 
-
-
+/*
+#if __WORDSIZE == 64
+  if (!args->print_64bit_info.value) {
+#endif
+*/
   if (createqueue) {
     queue = new state_queue((unsigned long) (gPercentActiveStates * NumStates) );
     MEMTRACKALLOC
@@ -28,6 +31,11 @@ StateManager::StateManager(bool createqueue, unsigned long NumStates)
     queue = new state_stack((unsigned long) (gPercentActiveStates * NumStates) );
     MEMTRACKALLOC
   }
+/*  
+#if __WORDSIZE == 64
+  }
+#endif  
+*/
   the_states = new state_set(NumStates);
   MEMTRACKALLOC
   PAUSE

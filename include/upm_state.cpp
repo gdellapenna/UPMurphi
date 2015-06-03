@@ -151,16 +151,42 @@ bool StatePtr::compare (state * s)
   // compare the state I point to with s
 #ifdef HASHC
   if (args->trace_file.value) {
+#if __WORDSIZE == 32
     unsigned long *
+#else //__WORDSIZE == 64
+    unsigned int *
+#endif
     key = h3->hash (s, FALSE);
+#if __WORDSIZE == 32
     unsigned long
-    c1 = key[1] &
-         ((~0UL) <<
-          (args->num_bits.value > 32 ? 0 : 32 - args->num_bits.value));
+#else //__WORDSIZE == 64
+    unsigned int
+#endif
+	c1 = key[1] &
+#if __WORDSIZE == 32
+	((~0UL) <<
+	 (args->num_bits.value >
+	  BITUNSIGNED ? 0UL : BITUNSIGNED - args->num_bits.value));
+#else //__WORDSIZE == 64
+	((~0) <<
+	 (args->num_bits.value >
+	  BITUNSIGNED ? 0 : BITUNSIGNED - args->num_bits.value));
+#endif
+#if __WORDSIZE == 32
     unsigned long
+#else //__WORDSIZE == 64
+    unsigned int
+#endif    
     c2 =
       key[2] & (args->num_bits.value >
-                32 ? (~0UL) << (64 - args->num_bits.value) : 0UL);
+#if __WORDSIZE == 32
+		       BITUNSIGNED ? (~0UL) << (2 * BITUNSIGNED -
+						args->num_bits.
+						value) : 0UL);
+#else //__WORDSIZE == 64
+		       BITUNSIGNED ? (~0) << (2 * BITUNSIGNED -
+					      args->num_bits.value) : 0);
+#endif	  
 
     return (c1 == TraceFile->read (lv)->c1 &&
             c2 == TraceFile->read (lv)->c2);
@@ -744,38 +770,27 @@ state_set::state_set (unsigned long table_size):
   num_elts (0),
   num_elts_reduced (0),
   reachables(NULL)
-  //num_tables (1)
 {
   create_table(table_size,0);
   if(needs_expanded_states()) reachables = Storage->getReachablesFile(true);
-
 }
 
 state_set::~state_set ()
-{
-  /*
-  	for(int i=0; i<num_tables; ++i) {
-  		if (table[i]) {
-  			delete[]table[i];
-  			delete[]disk_index[i];
-  			delete Full[i];
-  		}
-  	}
-  */
+{  
   delete[] table;
   delete[] disk_index;
   delete Full;
 }
 
+#if __WORDSIZE == 64
+#include <math.h>
+#endif
+
 void state_set::create_table (unsigned long table_size, int level)
 {
-
-
   unsigned long i;
 
-  //if (level>=MAX_TABLE_LEVELS) Error.Notrace("Hash tables full");
-  //if (table[level]!=NULL) Error.Notrace("Internal: recreating an hash table in use");
-
+#if __WORDSIZE == 32  
 #ifndef HASHC
   table = new state[table_size];
   MEMTRACKALLOC
@@ -790,6 +805,43 @@ void state_set::create_table (unsigned long table_size, int level)
 
   for (i = 0; i < size; i++)  table[i] = 0UL;
 #endif
+#else //__WORDSIZE == 64
+#ifndef HASHC
+  table = new state[table_size];
+  MEMTRACKALLOC
+#else
+  assert (sizeof (Unsigned32) == 4);	// the implementation is pretty dependent on the 32 bits
+  unsigned long size = (unsigned long) ((double) table_size * args->num_bits.value / BITUNSIGNED) + 3;
+  bits_for_size = (unsigned int) floor(log((double) table_size) / log((double) 2)) + 1;
+/*
+  if (args->print_64bit_info.value) {
+    int amount = 3 * sizeof(Unsigned32) * CHAR_BIT - bits_for_size;
+    printf
+	("With %lu bytes of RAM, you can use at most %d bits (option -b) for the hash compaction\n",
+	 args->mem.value, amount > 64 ? 64 : amount);
+    printf("Value for bits_for_size: %d\n", bits_for_size);
+    if (TraceFile != NULL)
+      delete TraceFile;
+    exit(1);
+  }
+*/  
+  // higher precision necessary to avoid overflow
+  // two extra elements needed in table
+
+  // in order to address an hash table entry, we may use the whole first int + what
+  // remains of the other 2 ints when args->num_bits.value bits are subtracted
+	if (bits_for_size >  3 * sizeof(Unsigned32) * CHAR_BIT - args->num_bits.value)
+	  Error.Notrace("Too many bits for the hash compaction (option -b); may be at most %d", 3 * sizeof(Unsigned32) * CHAR_BIT - bits_for_size);
+    bits_for_size = bits_for_size <= BITUNSIGNED ? BITUNSIGNED : bits_for_size;
+	  
+  table = new Unsigned32[size];
+  MEMTRACKALLOC
+  PAUSE
+
+  for (i = 0; i < size; i++)  table[i] = (Unsigned32) 0;;
+#endif
+#endif
+
   disk_index = new unsigned long[table_size];
   MEMTRACKALLOC
   PAUSE
@@ -801,6 +853,7 @@ void state_set::create_table (unsigned long table_size, int level)
   PAUSE
 
 }
+
 
 bool state_set::simple_was_present (state * &in, bool valid, bool permanent, unsigned long *index)
 /* changes in to point to the first state found with that pattern. */
@@ -818,19 +871,35 @@ bool state_set::simple_was_present (state * &in, bool valid, bool permanent, uns
   unsigned long h2 = 1 + key % (table_size - 1);
   unsigned long h = h1;
 #else
+#if __WORDSIZE == 32
   unsigned long *key = h3->hash(in, valid);
   unsigned long h1 = key[0] % table_size;
   unsigned long h2;
   register unsigned long h = h1;
   register unsigned long num_bits = args->num_bits.value;
   register unsigned long mask1 =
-    (~0UL) << (num_bits > 32 ? 0 : 32 - num_bits);
+      (~0UL) << (num_bits > 32 ? 0 : 32 - num_bits);
   register unsigned long mask2 =
-    num_bits > 32 ? (~0UL) << (64 - num_bits) : 0UL;
+      num_bits > 32 ? (~0UL) << (64 - num_bits) : 0UL;
   register unsigned long addr, offset;
   register unsigned long c1 = key[1] & mask1;
   register unsigned long c2 = key[2] & mask2;
   register unsigned long t1, t2;
+#else //__WORDSIZE == 64
+  unsigned int *key = h3->hash(in, valid);
+  unsigned long h;
+  unsigned long h2;
+  register unsigned int num_bits = args->num_bits.value;
+  register unsigned int
+      mask1 =
+      (~0) << (num_bits > BITUNSIGNED ? 0 : BITUNSIGNED - num_bits);
+  register unsigned int mask2 =
+      num_bits > BITUNSIGNED ? (~0) << (2 * BITUNSIGNED - num_bits) : 0;
+  register unsigned long addr, offset;
+  register unsigned int c1 = key[1] & mask1;
+  register unsigned int c2 = key[2] & mask2;
+  register unsigned int t1, t2;
+#endif
 #endif
 
 #ifdef VER_PSEUDO
@@ -880,11 +949,38 @@ bool state_set::simple_was_present (state * &in, bool valid, bool permanent, uns
 // hash compaction, uses ordered hashing
 // the state-insertion is done in two steps: search and insertion
 
+#if __WORDSIZE == 32
   h2 = 1 + c1 % (table_size - 1);	// calculation uses compressed value
+#else //__WORDSIZE == 64
+  if (bits_for_size == BITUNSIGNED) {
+    h = key[0] % table_size;
+    h2 = 1 + c1 % (table_size - 1);	// calculation uses compressed value
+  } else {			// bits_for_size > BITUNSIGNED
+    /* LSB is at the right
+       key[2]   key[1]   key[0]
+       hhzzzzzz hhhhhhhh xxxxxxxx
+       h =  00zzzzzzxxxxxxxx
+       (not taking into account % table_size)
+     */
+    h = ((unsigned long) key[0] +
+	 (((unsigned long) (key[2] %
+			    (1 << (bits_for_size - BITUNSIGNED)))) <<
+	  BITUNSIGNED)) % table_size;
+    /* LSB is at the right
+       c2       c1
+       xx000000 yyyyyyyy
+
+       h2 = 000000xxyyyyyyyy
+       (not taking into account % (table_size - 1) and the initial 1 +)
+     */
+    h2 = 1 + (((unsigned long) c1) + (((unsigned long) (c2 >> (2 * BITUNSIGNED - num_bits))) << BITUNSIGNED)) % (table_size - 1);	// calculation uses compressed value
+  }
+#endif
 
   // search - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   do {
+#if __WORDSIZE == 32
     // calculate address and offset in table
     // 32 bit arithmetic not sufficient and may cause overflow
     // addr = (h*num_bits) / 32
@@ -895,6 +991,11 @@ bool state_set::simple_was_present (state * &in, bool valid, bool permanent, uns
     offset = (h & 0xffffUL) * num_bits;
     addr = (((h >> 16) * num_bits) << 11) + (offset >> 5);
     offset &= 0x1fUL;
+#else //__WORDSIZE == 64
+    // 64 bit arithmetic should always be sufficient 
+    addr = (h * num_bits) / BITUNSIGNED;
+    offset = (h * num_bits) % BITUNSIGNED;
+#endif
 
     if (is_empty(h))
       break;			// search unsuccessful
@@ -950,9 +1051,15 @@ bool state_set::simple_was_present (state * &in, bool valid, bool permanent, uns
 
     //get next slot in the collision list
     h = (h + 1 + c1 % (table_size - 1)) % table_size;
+#if __WORDSIZE == 32
     offset = (h & 0xffffUL) * num_bits;
     addr = (((h >> 16) * num_bits) << 11) + (offset >> 5);
     offset &= 0x1fUL;
+#else //__WORDSIZE == 64
+    // 64 bit arithmetic should always be sufficient
+    addr = (h * num_bits) / BITUNSIGNED;
+    offset = (h * num_bits) % BITUNSIGNED;
+#endif
 
     //read the slot (h) value
     t1 = (table[addr] << offset | (offset == 0 ? 0 : table[addr + 1] >> (32 - offset)))	& mask1;
