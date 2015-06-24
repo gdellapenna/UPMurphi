@@ -324,7 +324,7 @@ class mu__real
 
     if (unzip_buf == NULL) {
       //DEBUG
-      fprintf(stderr, "ACC=%d,EXP=%d",accuracy, exponent);
+      //fprintf(stderr, "ACC=%d,EXP=%d",accuracy, exponent);
       Error.Error("Error in decompact_buf: unable to allocate memory.");
     }
 
@@ -505,17 +505,16 @@ class mu__real
     buf = tsprintf(format_string_1, val);
     if (!(strcmp(buf, "+nan")) || !(strcmp(buf, "-nan")))
       Error.
-      Error("Error in value(val): probably either division by zero.");
+      Error("Error in value(val) for variable %s: probably division by zero.",name);
     if (!(strcmp(buf, "+inf")) || !(strcmp(buf, "-inf")))
-      Error.Error("Error in value(val): exponent out of bounds.");
+      Error.Error("Error in value(val) for variable %s: exponent out of bounds.",name);
     tmp = strstr(buf, "e");
     sscanf(++tmp, "%d", &ex_value);	//im: jump 'e'
     if (ex_value < -exponent_value + 1)
       val = (double) 0;
-    else if (ex_value > exponent_value)
-      Error.Error("Error in value(val): exponent %d out of bounds.",
-                  ex_value);
-
+    else if (ex_value > exponent_value) {    	  
+	   Error.Error("Error in value(val) for variable %s: exponent %d out of bounds (max allowed is %d) for value %le. Try increasing the number of integer digits to %d for this variable.",name,ex_value,exponent_value,val,ex_value+1);	
+	}
     if (in_world)
 #ifdef ALIGN
       setreal(val);
