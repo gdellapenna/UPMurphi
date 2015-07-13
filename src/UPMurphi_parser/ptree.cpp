@@ -847,9 +847,10 @@ string analysis::toMurphi_declaration(int indent)
 {
   string declarations;
   // compute mantissa and exponent
+  // new formula by Giuseppe Della Penna for fixing "out of bound" exceptions!
   int prec = atoi(precision.c_str());
-  int exponent_c = atoi(exponent.c_str());
-  int mantissa_c = atoi(mantissa.c_str()) + exponent_c + 1;
+  int exponent_c = atoi(mantissa.c_str()) - 1; 
+  int mantissa_c = atoi(exponent.c_str()) + atoi(mantissa.c_str());
   char buffer [10];
   sprintf (buffer, "%d",mantissa_c);
   mantissa=buffer;
