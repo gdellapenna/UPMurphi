@@ -2955,7 +2955,7 @@ public:
         toReturn += GLOBAL_CLOCK;
         toReturn += " + T;\n";
         toReturn += this->toMurphi_TIL_TIF(indent, problem);
-        toReturn += "\n \t event_check();\n\t apply_continuous_change();\n";
+        toReturn += "\n \t event_check();\n\t apply_continuous_change();\n\t event_check();\n";
         toReturn += "END;\n";
         
 		//}
