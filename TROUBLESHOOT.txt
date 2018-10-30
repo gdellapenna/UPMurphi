@@ -1,0 +1,35 @@
+The latest libc and flex versions are incompatible with the UPMurphi core, which 
+unfortunately uses legacy Murphi code. Thus, if you encounter problems
+
+1) check that you have the following versions of byacc, bison and flex installed:
+	bison 3.0.4, byacc 1.9, flex 2.5.39 (you can write, e.g., flex -V to read 
+	the currently installed version). 
+	
+	In particular, we are aware of an issue	with flex version >2.5.39 that 
+	breaks the building process of the PDDL-to-Murphi compiler (pddl2upm). 
+	
+	In this case, downgrade to flex 2.5.39.
+	To do this, e.g., in Ubuntu 18.04 you have to edit /etc/apt/sources.list
+	and ADD the following line at the end of the file to enable the trusty-backports source:
+	
+	deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse
+	
+	after saving the modified /etc/apt/sources.list, update the apt database with the command
+	
+	sudo apt update
+	
+	and finally install the required version of flex from trusty-backports 
+	
+	sudo apt install -t trusty-backports flex=2.5.39-8~ubuntu14.04.1
+	
+	
+2) check that you have installed libc6-dev-i386, gcc-multilib and g++-multilib
+   as described in QUICK_START.txt
+	
+   If you don't, you may get segmentation faults during the model compilation.
+   
+   
+With these fixes (together with those encoded in the makefiles) we were able 
+to compile UPMurphi and successfully run all the examples under Ubuntu 18.04 
+with gcc 7.3.0
+	
