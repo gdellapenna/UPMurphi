@@ -6,7 +6,7 @@ FLEX = flex++
 BYACC = bison
 
 # choice of the options
-CFLAGS = -O2 -DYYMAXDEPTH=25000    # options for g++
+CFLAGS = -O2 -DYYMAXDEPTH=25000 -Wno-deprecated-declarations -Wno-write-strings     # options for g++
 
 #must end with a slash
 PDDL_PARSER_DIR = bin/ 
