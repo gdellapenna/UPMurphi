@@ -1,3 +1,9 @@
+3.03: "Still alive" (2018/10/30)
+
+[FIX] updated Makefiles and added TROUBLESHOOT.txt with the workarounds needed to
+compile UPMurphi with recent compilers and development tools.
+
+
 3.02: Bug fix release (2015/05/04)
 
 [FIX] fixed issue about TIL/TIF check (now check the start state)
