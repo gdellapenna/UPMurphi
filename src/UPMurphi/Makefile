@@ -18,7 +18,7 @@ FLEX = flex
 BYACC = byacc
 
 # compiler options
-CFLAGS = -O2 -DYYMAXDEPTH=25000        # options for g++
+CFLAGS = -O0 -DYYMAXDEPTH=25000 -Wno-format -Wno-format-extra-args      # options for g++
 
 #must end with a slash
 BIN_DIR = bin/ 
