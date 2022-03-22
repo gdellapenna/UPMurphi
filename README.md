@@ -3,6 +3,8 @@ The Universal Planner Murphi supports planning and universal planning for linear
 
 UPMurphi is based on the Discretise and Validate approach and it has been designed to automatically interface with the VAL plan validator.
 
+### Warning:  this project is no longer maintained. Unfortunately, the Murphi core, which UPMurphi builds on, is rather old and has not been updated, so maintaining UPMurphi would require us a complete rewriting of the base code, which is currently impossible. If you still want to try it, refer to the troubleshoot.txt for the correct versions of the libraries and tools that were used in our last successful compilations. Thanks for your interest in UPMurphi, we hope to come back soon with a new, updated tool.
+
 ## Quick Start
 
 To quickly begin using UPMurphi, follow these steps.
